@@ -1,0 +1,103 @@
+<!-- templates/index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GPA Leaderboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">📊</div>
+      <div class="title">GPA Leaderboard</div>
+    </div>
+    <div class="subtitle">Overall & per-class leaderboards • One-click uploads</div>
+  </header>
+
+  <main class="container">
+    <section class="controls">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-class="overall">Overall</button>
+        {% if class_list %}
+          {% for cls in class_list %}
+            <button class="tab" data-class="{{ cls }}">{{ cls }}</button>
+          {% endfor %}
+        {% endif %}
+        <div class="spacer"></div>
+        <div class="actions">
+          <label class="upload-btn">
+            Upload Print HTML
+            <input type="file" id="fileUpload" accept=".html" />
+          </label>
+          <a id="bookmarkletLink" class="bookmarklet" href="#">Install Bookmarklet</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="cards" class="cards">
+      {% if latest %}
+        {% for s in latest.overall %}
+          {% set trend = latest.overall_trends.get(s.name, 0) %}
+          {% set change = latest.overall_changes.get(s.name, 0) %}
+          <article class="card" data-classes="overall">
+            <div class="left">
+              <div class="rank">#{{ loop.index }}</div>
+              <div class="meta">
+                <div class="name">{{ s.name }}</div>
+                <div class="small">Overall GPA</div>
+              </div>
+            </div>
+            <div class="right">
+              <div class="gpa">{{ s.gpa }}</div>
+              <div class="indicators">
+                <div class="change {% if change>0 %}up{% elif change<0 %}down{% else %}same{% endif %}">
+                  {% if change>0 %}⬆{{ change }}{% elif change<0 %}⬇{{ change|abs }}{% else %}-{% endif %}
+                </div>
+                <div class="trend" style="color:{% if trend>0 %}#16a34a{% elif trend<0 %}#ef4444{% else %}#6b7280{% endif %}">
+                  {% if trend>0 %}▲{% elif trend<0 %}▼{% else %}-{% endif %}
+                </div>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        <div class="empty">No data yet — use the bookmarklet or upload a print HTML to add grades.</div>
+      {% endif %}
+    </section>
+
+    <section class="history">
+      <h3>History (last {{ history|length }} uploads)</h3>
+      {% for snap in history %}
+        <div class="snapshot">
+          <div class="snap-header">Snapshot {{ loop.index }}</div>
+          <div class="snap-body">
+            <div class="snap-overall">
+              <strong>Overall</strong>
+              <ol>
+                {% for s in snap.overall %}
+                  <li>{{ s.name }} — {{ s.gpa }}</li>
+                {% endfor %}
+              </ol>
+            </div>
+            {% for cls, lst in snap.classes.items() %}
+              <div class="snap-class">
+                <strong>{{ cls }}</strong>
+                <ol>
+                  {% for s in lst %}
+                    <li>{{ s.name }} — {{ s.gpa }}</li>
+                  {% endfor %}
+                </ol>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
